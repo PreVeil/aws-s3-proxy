@@ -21,6 +21,7 @@ type config struct { // nolint
 	AwsAPIEndpoint     string        // AWS_API_ENDPOINT
 	S3Bucket           string        // AWS_S3_BUCKET
 	S3KeyPrefix        string        // AWS_S3_KEY_PREFIX
+	S3Metadata         bool          // AWS_S3_METADATA
 	IndexDocument      string        // INDEX_DOCUMENT
 	DirectoryListing   bool          // DIRECTORY_LISTINGS
 	DirListingFormat   string        // DIRECTORY_LISTINGS_FORMAT
@@ -61,6 +62,10 @@ func Setup() {
 	indexDocument := os.Getenv("INDEX_DOCUMENT")
 	if len(indexDocument) == 0 {
 		indexDocument = "index.html"
+	}
+	s3Metadata := false
+	if b, err := strconv.ParseBool(os.Getenv("AWS_S3_METADATA")); err == nil {
+		s3Metadata = b
 	}
 	directoryListings := false
 	if b, err := strconv.ParseBool(os.Getenv("DIRECTORY_LISTINGS")); err == nil {
@@ -103,6 +108,7 @@ func Setup() {
 		AwsAPIEndpoint:     os.Getenv("AWS_API_ENDPOINT"),
 		S3Bucket:           os.Getenv("AWS_S3_BUCKET"),
 		S3KeyPrefix:        os.Getenv("AWS_S3_KEY_PREFIX"),
+		S3Metadata:         s3Metadata,
 		IndexDocument:      indexDocument,
 		DirectoryListing:   directoryListings,
 		DirListingFormat:   os.Getenv("DIRECTORY_LISTINGS_FORMAT"),
