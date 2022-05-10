@@ -70,7 +70,7 @@ func AwsS3(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, message, code)
 		return
 	}
-	setHeadersFromAwsResponse(w, obj, c.HTTPCacheControl, c.HTTPExpires)
+	setHeadersFromAwsResponse(w, obj, c.HTTPCacheControl, c.HTTPExpires, c.S3Metadata)
 
 	io.Copy(w, obj.Body) // nolint
 }
@@ -93,7 +93,7 @@ func replacePathWithSymlink(client service.AWS, bucket, symlinkPath string) (*st
 	return aws.String(link.URL), nil
 }
 
-func setHeadersFromAwsResponse(w http.ResponseWriter, obj *s3.GetObjectOutput, httpCacheControl, httpExpires string) {
+func setHeadersFromAwsResponse(w http.ResponseWriter, obj *s3.GetObjectOutput, httpCacheControl, httpExpires string, s3Metadata bool) {
 
 	// Cache-Control
 	if len(httpCacheControl) > 0 {
@@ -119,6 +119,14 @@ func setHeadersFromAwsResponse(w http.ResponseWriter, obj *s3.GetObjectOutput, h
 	setStrHeader(w, "Content-Type", obj.ContentType)
 	setStrHeader(w, "ETag", obj.ETag)
 	setTimeHeader(w, "Last-Modified", obj.LastModified)
+
+	// A map of metadata to store with the object in S3.
+	// Metadata map[string]*string `location:"headers" locationName:"x-amz-meta-" type:"map"`
+	if s3Metadata {
+		for metaKey, metaValue := range obj.Metadata {
+			setStrHeader(w, metaKey, metaValue)
+		}
+	}
 
 	w.WriteHeader(determineHTTPStatus(obj))
 }
